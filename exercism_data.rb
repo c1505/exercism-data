@@ -49,10 +49,20 @@ end
 # 293 iterations submitted for swift in the last 30 days
 # 0 iterations submitted for vbnet in the last 30 days
 
-# com/search/issues?q=label:\"#{input_string}\"+language:ruby+st
-# get track names from JSON
+
+## get track names from JSON
 
 # file = File.read('exercism_tracks.json')
 # json = JSON.parse(file)
 # json["tracks"].first["slug"]
 # names = json["tracks"].map {|track| track["slug"]}
+
+#TODO
+# run and create files for each of the json blobs named after the track.  then i don't have to keep going to the server to get data to play with
+
+
+# out_file = File.new("out.txt", "w")
+# #...
+# out_file.puts("write your stuff here")
+# #...
+# out_file.close
