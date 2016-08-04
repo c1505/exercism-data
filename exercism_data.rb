@@ -1,68 +1,77 @@
-require 'httparty'
-track_names = ["assembly", "bash", "c", "clojure", "coffeescript", "cpp", "csharp", "dlang", "ecmascript", "elixir", "erlang", "fsharp", "go", "groovy", "haskell", "java", "javascript", "lisp", "lua", "nimrod", "objective-c", "ocaml", "perl5", "perl6", "php", "plsql", "powershell", "proofs", "python", "r", "ruby", "rust", "scala", "sml", "swift", "vbnet"]
-track_names_without_data = ["assembly", "nimrod", "proofs"]
-track_names.each do |track|
-    response = HTTParty.get("http://exercism.io/api/v1/stats/#{track}/activity/recent")
-    if response.code == 200
-        json = JSON.parse(response.body)
-        iteration_count = json["track"]["problems"].map {|problem| problem[1]["iterations"]}.reduce(:+)
-        print "#{iteration_count} iterations submitted for #{response["track"]["id"]} in the last 30 days"
-    else 
-        print "500 for track #{track}"
+require 'httparty' 
+
+
+class ExercismData
+  #need to delete nil values at some step
+
+  TRACK_NAMES = ["bash", "c", "clojure", "coffeescript", "cpp", "csharp", "dlang", "ecmascript", "elixir", "erlang", "fsharp", "go", "groovy", "haskell", "java", "javascript", "lisp", "lua", "objective-c", "ocaml", "perl5", "perl6", "php", "plsql", "powershell", "python", "r", "ruby", "rust", "scala", "sml", "swift", "vbnet"]
+  attr_reader :whole_hash
+
+  def initialize
+    @whole_hash = {}
+  end
+
+  def get_tracks
+    TRACK_NAMES.each do |track|
+      single_track = get_track_stats(track)
+      add_to_hash(single_track)
     end
+  end
+
+  def save_to_file
+    # name with todays date
+    out_file = File.new("data.json", "w")
+    out_file.puts(@whole_hash)
+    out_file.close
+  end
+
+  def iteration_counts
+    #fix this
+    #will likely have to get rid of nils before this step
+
+    @counts_of_iterations = @whole_hash.map do |track|
+      track_counts = track[1]["problems"].map do |problem|
+        problem[1]["iterations"]
+      end
+    { track[0] => track_counts.reduce(:+) }
+    end
+    @counts_of_iterations
+  end
+
+  def read_from_file(file_name)
+    contents = File.read(file_name)
+    @whole_hash = eval(contents)
+  end
+
+  def save_to_csv(file_name)
+    column_names = @whole_hash.map {|f| f.keys[0]}
+    vals = @whole_hash.map {|f| f.values[0]}
+    s=CSV.generate do |csv|
+      csv << column_names
+      csv << vals
+    end
+    File.write(file_name, s)
+  end
+
+
+
+  private
+
+    def get_track_stats(track)
+      response = HTTParty.get("http://exercism.io/api/v1/stats/#{track}/activity/recent")
+      if response.code == 200
+        json = JSON.parse(response.body)
+        json["track"]
+      else
+        puts "track #{track} not found"
+        {track["id"] => "not found"}
+      end
+    end
+
+    def add_to_hash(single_track)
+      track_name = single_track["id"]
+      @whole_hash[track_name] = single_track
+    end
+
 end
-# 28JUL16
-# 500 for track assembly
-# 15 iterations submitted for bash in the last 30 days
-# 22 iterations submitted for c in the last 30 days
-# 616 iterations submitted for clojure in the last 30 days
-# 18 iterations submitted for coffeescript in the last 30 days
-# 279 iterations submitted for cpp in the last 30 days
-# 281 iterations submitted for csharp in the last 30 days
-# iterations submitted for dlang in the last 30 days
-# 204 iterations submitted for ecmascript in the last 30 days
-# 2526 iterations submitted for elixir in the last 30 days
-# 177 iterations submitted for erlang in the last 30 days
-# 205 iterations submitted for fsharp in the last 30 days
-# 1589 iterations submitted for go in the last 30 days
-# 15 iterations submitted for groovy in the last 30 days
-# 732 iterations submitted for haskell in the last 30 days
-# 729 iterations submitted for java in the last 30 days
-# 1869 iterations submitted for javascript in the last 30 days
-# 106 iterations submitted for lisp in the last 30 days
-# 83 iterations submitted for lua in the last 30 days
-# 500 for track nimrod19 
-# iterations submitted for objective-c in the last 30 days
-# 78 iterations submitted for ocaml in the last 30 days
-# 23 iterations submitted for perl5 in the last 30 days
-# 0 iterations submitted for perl6 in the last 30 days
-# 171 iterations submitted for php in the last 30 days
-# 0 iterations submitted for plsql in the last 30 days
-# iterations submitted for powershell in the last 30 days
-# 500 for track proofs
-# 1762 iterations submitted for python in the last 30 days
-# 1 iterations submitted for r in the last 30 days
-# 3098 iterations submitted for ruby in the last 30 days
-# 1378 iterations submitted for rust in the last 30 days
-# 610 iterations submitted for scala in the last 30 days
-# 0 iterations submitted for sml in the last 30 days
-# 293 iterations submitted for swift in the last 30 days
-# 0 iterations submitted for vbnet in the last 30 days
 
-
-## get track names from JSON
-
-# file = File.read('exercism_tracks.json')
-# json = JSON.parse(file)
-# json["tracks"].first["slug"]
-# names = json["tracks"].map {|track| track["slug"]}
-
-#TODO
-# run and create files for each of the json blobs named after the track.  then i don't have to keep going to the server to get data to play with
-
-
-# out_file = File.new("out.txt", "w")
-# #...
-# out_file.puts("write your stuff here")
-# #...
-# out_file.close
