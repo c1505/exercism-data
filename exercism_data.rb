@@ -18,9 +18,9 @@ class ExercismData
     end
   end
 
-  def save_to_file
+  def save_to_file(file_name)
     # name with todays date
-    out_file = File.new("data.json", "w")
+    out_file = File.new(file_name, "w")
     out_file.puts(@whole_hash)
     out_file.close
   end
@@ -30,8 +30,10 @@ class ExercismData
     #will likely have to get rid of nils before this step
 
     @counts_of_iterations = @whole_hash.map do |track|
-      track_counts = track[1]["problems"].map do |problem|
-        problem[1]["iterations"]
+      if track[1]["problems"] #temporary hack
+        track_counts = track[1]["problems"].map do |problem|
+          problem[1]["iterations"]
+        end
       end
     { track[0] => track_counts.reduce(:+) }
     end
@@ -44,14 +46,15 @@ class ExercismData
   end
 
   def save_to_csv(file_name)
-    column_names = @whole_hash.map {|f| f.keys[0]}
-    vals = @whole_hash.map {|f| f.values[0]}
+    column_names = @counts_of_iterations.map {|f| f.keys[0]}
+    vals = @counts_of_iterations.map {|f| f.values[0]}
     s=CSV.generate do |csv|
       csv << column_names
       csv << vals
     end
     File.write(file_name, s)
   end
+
 
 
 
@@ -65,6 +68,7 @@ class ExercismData
       else
         puts "track #{track} not found"
         {track["id"] => "not found"}
+        # change this so i don't have nil values
       end
     end
 
@@ -74,4 +78,15 @@ class ExercismData
     end
 
 end
+# a.delete_if {|f| f.values[0] == nil}
+# a.sort_by {|f| f.values[0]}
 
+  def save_to_csv(file_name, array)
+    column_names = array.map {|f| f.keys[0]}
+    vals = array.map {|f| f.values[0]}
+    s=CSV.generate do |csv|
+      csv << column_names
+      csv << vals
+    end
+    File.write(file_name, s)
+  end
